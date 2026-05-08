@@ -47,7 +47,7 @@ function resizeCanvas() {
 }
 
 function updateColors(dt) {
-    if (!state.COLORFUL) return;
+    if (!state.RAINBOW) return;
 
     colorUpdateTimer += dt * state.COLOR_UPDATE_SPEED;
     if (colorUpdateTimer >= 1) {

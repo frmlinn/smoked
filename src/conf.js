@@ -11,7 +11,7 @@ export const state = {
     SPLAT_RADIUS: 0.25,
     SPLAT_FORCE: 6000,
     SHADING: true,
-    COLORFUL: true,
+    RAINBOW: true,
     COLOR_UPDATE_SPEED: 10,
     PAUSE: false,
     BACK_COLOR: { r: 0, g: 0, b: 0 },
@@ -30,8 +30,8 @@ export const state = {
 export const pane = new Pane({ title: 'Smoked Config' });
 
 const simFolder = pane.addFolder({ title: 'Simulation' });
-simFolder.addBinding(state, 'SIM_RESOLUTION', { options: { '32': 32, '64': 64, '128': 128, '256': 256 }});
-simFolder.addBinding(state, 'DYE_RESOLUTION', { options: { '128': 128, '256': 256, '512': 512, '1024': 1024 }});
+//simFolder.addBinding(state, 'SIM_RESOLUTION', { options: { '32': 32, '64': 64, '128': 128, '256': 256 }});
+//simFolder.addBinding(state, 'DYE_RESOLUTION', { options: { '128': 128, '256': 256, '512': 512, '1024': 1024 }});
 simFolder.addBinding(state, 'DENSITY_DISSIPATION', { min: 0, max: 4.0 });
 simFolder.addBinding(state, 'VELOCITY_DISSIPATION', { min: 0, max: 4.0 });
 simFolder.addBinding(state, 'PRESSURE', { min: 0, max: 1.0 });
@@ -42,7 +42,7 @@ simFolder.addBinding(state, 'PAUSE');
 // --- VISUALS FOLDER ---
 const visualsFolder = pane.addFolder({ title: 'Visuals' });
 visualsFolder.addBinding(state, 'SHADING');
-visualsFolder.addBinding(state, 'COLORFUL');
+visualsFolder.addBinding(state, 'RAINBOW');
 visualsFolder.addBinding(state, 'BACK_COLOR');
 
 // --- BLOOM FOLDER ---
@@ -56,4 +56,4 @@ const sunraysFolder = pane.addFolder({ title: 'Sunrays', expanded: false });
 sunraysFolder.addBinding(state, 'SUNRAYS');
 sunraysFolder.addBinding(state, 'SUNRAYS_WEIGHT', { min: 0.3, max: 1.0 });
 
-pane.addButton({ title: 'Random Splats' });
+pane.addButton({ title: 'SPLAT!' });

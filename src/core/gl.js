@@ -4,27 +4,27 @@ export let ext;
 let blitVao;
 
 export function initWebGL(canvas) {
-    const params = { alpha: true, depth: false, stencil: false, antialias: false, preserveDrawingBuffer: false };
+    const params = { alpha: false, depth: false, stencil: false, antialias: false, preserveDrawingBuffer: false };
     gl = canvas.getContext('webgl2', params);
 
     if (!gl) {
         throw new Error('WebGL 2 no está soportado en este navegador.');
     }
 
+    // Vital para renderizar EN los FBOs usando formatos flotantes en WebGL 2
     gl.getExtension('EXT_color_buffer_float');
-    
-    gl.getExtension('OES_texture_float_linear');
 
     ext = {
-        supportLinearFiltering: true,
+        // En WebGL 2 el filtrado lineal para float de 16 bits es nativo.
+        // Lo forzamos a true para que use gl.LINEAR y la física sea sedosa.
+        supportLinearFiltering: true, 
         halfFloatTexType: gl.HALF_FLOAT,
         formatRGBA: { internalFormat: gl.RGBA16F, format: gl.RGBA },
         formatRG: { internalFormat: gl.RG16F, format: gl.RG },
         formatR: { internalFormat: gl.R16F, format: gl.RED }
     };
 
-    gl.clearColor(0.0, 0.0, 0.0, 1.0);
-
+    // --- PREPARACIÓN DEL VAO ---
     blitVao = gl.createVertexArray();
     gl.bindVertexArray(blitVao);
 

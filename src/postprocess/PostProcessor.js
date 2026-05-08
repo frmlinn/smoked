@@ -86,21 +86,21 @@ export class PostProcessor {
     render(solver) {
         this.updateDisplayMaterial();
 
-        if (state.BLOOM) {
-            this.applyBloom(solver.dye.read, this.bloom);
-        }
+        if (state.BLOOM) this.applyBloom(solver.dye.read, this.bloom);
         
         if (state.SUNRAYS) {
             this.applySunrays(solver.dye.read, solver.dye.write, this.sunrays);
             this.blur(this.sunrays, this.sunraysTemp, 1);
         }
 
-        gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
-        gl.enable(gl.BLEND);
+        // 1. Pintar el fondo TOTALMENTE OPACO (sin blending)
+        gl.disable(gl.BLEND);
         this.drawColor(null, this.normalizeColor(state.BACK_COLOR));
 
-        this.drawDisplay(solver, null);
-
+        // 2. Activar el blending solo para pintar el fluido encima
+        gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
+        gl.enable(gl.BLEND);
+        
         this.drawDisplay(solver, null);
     }
 
