@@ -72,11 +72,7 @@ export class PointerManager {
         this.canvas.addEventListener('mousedown', e => {
             let posX = this._scaleByPixelRatio(e.offsetX);
             let posY = this._scaleByPixelRatio(e.offsetY);
-            let pointer = this.pointers.find(p => p.id === -1);
-            if (!pointer) {
-                pointer = this._createPointer();
-                this.pointers.push(pointer);
-            }
+            let pointer = this.pointers[0];
             this._updatePointerDownData(pointer, -1, posX, posY);
         });
 
@@ -94,39 +90,57 @@ export class PointerManager {
 
         this.canvas.addEventListener('touchstart', e => {
             e.preventDefault();
-            const touches = e.targetTouches;
-            while (touches.length >= this.pointers.length) {
-                this.pointers.push(this._createPointer());
-            }
+            const touches = e.changedTouches;
             for (let i = 0; i < touches.length; i++) {
-                let posX = this._scaleByPixelRatio(touches[i].pageX);
-                let posY = this._scaleByPixelRatio(touches[i].pageY);
-                this._updatePointerDownData(this.pointers[i + 1], touches[i].identifier, posX, posY);
+                let pointer = this.pointers.slice(1).find(p => p.id === -1);
+                
+                if (!pointer) {
+                    pointer = this._createPointer();
+                    this.pointers.push(pointer);
+                }
+                
+                let posX = this._scaleByPixelRatio(touches[i].clientX);
+                let posY = this._scaleByPixelRatio(touches[i].clientY);
+                this._updatePointerDownData(pointer, touches[i].identifier, posX, posY);
             }
-        });
+        }, { passive: false });
 
         this.canvas.addEventListener('touchmove', e => {
             e.preventDefault();
-            const touches = e.targetTouches;
+            const touches = e.changedTouches;
             for (let i = 0; i < touches.length; i++) {
-                let pointer = this.pointers[i + 1];
-                if (!pointer.down) continue;
-                let posX = this._scaleByPixelRatio(touches[i].pageX);
-                let posY = this._scaleByPixelRatio(touches[i].pageY);
+                let pointer = this.pointers.find(p => p.id === touches[i].identifier);
+                if (!pointer || !pointer.down) continue;
+                
+                let posX = this._scaleByPixelRatio(touches[i].clientX);
+                let posY = this._scaleByPixelRatio(touches[i].clientY);
                 this._updatePointerMoveData(pointer, posX, posY);
             }
-        }, false);
+        }, { passive: false });
 
         window.addEventListener('touchend', e => {
             const touches = e.changedTouches;
             for (let i = 0; i < touches.length; i++) {
                 let pointer = this.pointers.find(p => p.id === touches[i].identifier);
-                if (pointer) this._updatePointerUpData(pointer);
+                if (pointer) {
+                    this._updatePointerUpData(pointer);
+                    pointer.id = -1;
+                }
+            }
+        });
+
+        window.addEventListener('touchcancel', e => {
+            const touches = e.changedTouches;
+            for (let i = 0; i < touches.length; i++) {
+                let pointer = this.pointers.find(p => p.id === touches[i].identifier);
+                if (pointer) {
+                    this._updatePointerUpData(pointer);
+                    pointer.id = -1;
+                }
             }
         });
     }
 
-    // Utilidades de color
     generateColor() {
         let c = this.HSVtoRGB(Math.random(), 1.0, 1.0);
         c.r *= 0.15;

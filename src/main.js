@@ -1,4 +1,4 @@
-import { state, pane } from './conf.js';
+import { state, pane, fpsGraph, onRandomSplat } from './conf.js';
 import { initWebGL } from './core/gl.js';
 import { FluidSolver } from './simulation/FluidSolver.js';
 import { PostProcessor } from './postprocess/PostProcessor.js';
@@ -24,13 +24,10 @@ pane.on('change', (ev) => {
     }
 });
 
-// Botón de Random Splats
-const btnRef = pane.children.find(c => c.title === 'Random Splats');
-if (btnRef) {
-    btnRef.on('click', () => {
-        pointerManager.splatStack.push(parseInt(Math.random() * 20) + 5);
-    });
-}
+onRandomSplat(() => {
+    pointerManager.splatStack.push(parseInt(Math.random() * 20) + 5);
+});
+
 function resizeCanvas() {
     const pixelRatio = window.devicePixelRatio || 1;
     const width = Math.floor(canvas.clientWidth * pixelRatio);
@@ -86,6 +83,8 @@ function applyInputs() {
 }
 
 function update(time) {
+    fpsGraph.begin();
+
     if (lastTime === 0) lastTime = time; 
 
     let dt = (time - lastTime) / 1000; 
@@ -102,6 +101,8 @@ function update(time) {
 
     post.render(solver);
 
+    fpsGraph.end();
+    
     requestAnimationFrame(update);
 }
 
