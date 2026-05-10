@@ -1,3 +1,7 @@
+/* * Base document styling: removes margins, limits overflow, 
+ * and prevents native touch/selection actions to allow 
+ * exclusive pointer handling on the canvas. 
+ */
 body, html {
     margin: 0;
     padding: 0;
@@ -11,6 +15,9 @@ body, html {
     -webkit-user-select: none;
 }
 
+/* * Canvas styling: forces the canvas to span the full viewport
+ * and prevents browser-native touch gestures (like scrolling).
+ */
 canvas {
     width: 100%;
     height: 100%;

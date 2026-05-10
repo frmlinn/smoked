@@ -4,7 +4,13 @@ import { FBO } from '../core/FBO.js';
 import { shaders } from '../shaders/index.js';
 import { state } from '../conf.js';
 
+/**
+ * Handles all post-processing effects such as Bloom, Sunrays, and final shading.
+ */
 export class PostProcessor {
+    /**
+     * Initializes shader programs and framebuffers for post-processing.
+     */
     constructor() {
         this.colorProgram          = new Program(shaders.baseVert, shaders.colorFrag);
         this.blurProgram           = new Program(shaders.blurVert, shaders.blurFrag);
@@ -13,7 +19,6 @@ export class PostProcessor {
         this.bloomFinalProgram     = new Program(shaders.baseVert, shaders.bloomFinalFrag);
         this.sunraysMaskProgram    = new Program(shaders.baseVert, shaders.sunraysMaskFrag);
         this.sunraysProgram        = new Program(shaders.baseVert, shaders.sunraysFrag);
-
         this.displayProgram        = new Program(shaders.baseVert, shaders.displayFrag);
 
         this.bloomFramebuffers = [];
@@ -24,6 +29,12 @@ export class PostProcessor {
         this.initFramebuffers();
     }
 
+    /**
+     * Calculates resolution scaled by aspect ratio.
+     * @private
+     * @param {number} resolution - Target base resolution.
+     * @returns {{width: number, height: number}} Scaled dimensions.
+     */
     _getResolution(resolution) {
         let aspectRatio = gl.drawingBufferWidth / gl.drawingBufferHeight;
         if (aspectRatio < 1) aspectRatio = 1.0 / aspectRatio;
@@ -37,6 +48,9 @@ export class PostProcessor {
             return { width: min, height: max };
     }
 
+    /**
+     * Initializes or resizes post-processing framebuffers based on current configuration.
+     */
     initFramebuffers() {
         const texType = ext.halfFloatTexType;
         const rgba = ext.formatRGBA;
@@ -73,6 +87,10 @@ export class PostProcessor {
         }
     }
 
+    /**
+     * Executes the post-processing pipeline.
+     * @param {import('../simulation/FluidSolver.js').FluidSolver} solver - The fluid simulation solver.
+     */
     render(solver) {
         if (state.BLOOM) this.applyBloom(solver.dye.read, this.bloom);
         
@@ -90,6 +108,11 @@ export class PostProcessor {
         this.drawDisplay(solver, null);
     }
 
+    /**
+     * Applies bloom effect via prefiltering, downsampling, and upsampling.
+     * @param {FBO} source - The source framebuffer.
+     * @param {FBO} destination - The target framebuffer.
+     */
     applyBloom(source, destination) {
         if (this.bloomFramebuffers.length < 2) return;
 
@@ -135,6 +158,12 @@ export class PostProcessor {
         blit(destination);
     }
 
+    /**
+     * Applies volumetric light rays effect.
+     * @param {FBO} source - Base image texture.
+     * @param {FBO} mask - Temporary mask FBO.
+     * @param {FBO} destination - Target FBO for sunrays.
+     */
     applySunrays(source, mask, destination) {
         gl.disable(gl.BLEND);
         this.sunraysMaskProgram.bind();
@@ -147,6 +176,12 @@ export class PostProcessor {
         blit(destination);
     }
 
+    /**
+     * Applies a dual-pass Gaussian blur.
+     * @param {FBO} target - The framebuffer to blur.
+     * @param {FBO} temp - Temporary ping-pong framebuffer.
+     * @param {number} iterations - Number of blur passes.
+     */
     blur(target, temp, iterations) {
         this.blurProgram.bind();
         for (let i = 0; i < iterations; i++) {
@@ -160,12 +195,22 @@ export class PostProcessor {
         }
     }
 
+    /**
+     * Fills the target with a solid color.
+     * @param {FBO|null} target - Destination FBO, or null for screen.
+     * @param {{r: number, g: number, b: number}} color - Normalized RGB color.
+     */
     drawColor(target, color) {
         this.colorProgram.bind();
         gl.uniform4f(this.colorProgram.uniforms.color, color.r, color.g, color.b, 1);
         blit(target);
     }
 
+    /**
+     * Renders the final composed image to the screen or target.
+     * @param {import('../simulation/FluidSolver.js').FluidSolver} solver - The fluid simulation solver.
+     * @param {FBO|null} target - Target FBO, or null for default framebuffer.
+     */
     drawDisplay(solver, target) {
         let width = target == null ? gl.drawingBufferWidth : target.width;
         let height = target == null ? gl.drawingBufferHeight : target.height;
@@ -190,6 +235,11 @@ export class PostProcessor {
         blit(target);
     }
 
+    /**
+     * Normalizes an 8-bit color object to [0, 1] range.
+     * @param {{r: number, g: number, b: number}} input - Base color.
+     * @returns {{r: number, g: number, b: number}} Normalized color.
+     */
     normalizeColor(input) {
         return {
             r: input.r / 255,

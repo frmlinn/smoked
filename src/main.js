@@ -15,6 +15,9 @@ const pointerManager = new PointerManager(canvas);
 let lastTime = 0;
 let colorUpdateTimer = 0.0;
 
+/**
+ * Re-initializes buffers when resolution settings change in UI.
+ */
 pane.on('change', (ev) => {
     if (ev.presetKey === 'SIM_RESOLUTION' || ev.presetKey === 'DYE_RESOLUTION') {
         solver.initFramebuffers();
@@ -24,10 +27,17 @@ pane.on('change', (ev) => {
     }
 });
 
+/**
+ * Triggers a random number of splats via the UI button.
+ */
 onRandomSplat(() => {
     pointerManager.splatStack.push(parseInt(Math.random() * 20) + 5);
 });
 
+/**
+ * Resizes the internal canvas resolution to match its styled CSS size.
+ * @returns {boolean} True if a resize occurred, false otherwise.
+ */
 function resizeCanvas() {
     const pixelRatio = window.devicePixelRatio || 1;
     const width = Math.floor(canvas.clientWidth * pixelRatio);
@@ -43,6 +53,10 @@ function resizeCanvas() {
     return false;
 }
 
+/**
+ * Updates pointer colors dynamically over time if RAINBOW mode is enabled.
+ * @param {number} dt - Delta time in seconds.
+ */
 function updateColors(dt) {
     if (!state.RAINBOW) return;
 
@@ -55,6 +69,10 @@ function updateColors(dt) {
     }
 }
 
+/**
+ * Injects multiple random splats into the fluid simulation.
+ * @param {number} amount - Number of splats to generate.
+ */
 function multipleSplats(amount) {
     for (let i = 0; i < amount; i++) {
         const color = pointerManager.generateColor();
@@ -67,6 +85,9 @@ function multipleSplats(amount) {
     }
 }
 
+/**
+ * Processes mouse/touch inputs and splat queue, applying forces to the solver.
+ */
 function applyInputs() {
     if (pointerManager.splatStack.length > 0) {
         multipleSplats(pointerManager.splatStack.pop());
@@ -82,6 +103,10 @@ function applyInputs() {
     });
 }
 
+/**
+ * Main application loop.
+ * @param {number} time - Current timestamp from requestAnimationFrame.
+ */
 function update(time) {
     fpsGraph.begin();
 
@@ -106,6 +131,7 @@ function update(time) {
     requestAnimationFrame(update);
 }
 
+// Initial random splats
 pointerManager.splatStack.push(parseInt(Math.random() * 20) + 5);
 
 resizeCanvas();

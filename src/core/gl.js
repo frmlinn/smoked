@@ -1,8 +1,33 @@
+/**
+ * @type {WebGL2RenderingContext} WebGL context instance.
+ */
 export let gl;
+
+/**
+ * @typedef {Object} WebGLExtensions
+ * @property {boolean} supportLinearFiltering - Indicates if linear filtering for half-float is supported.
+ * @property {number} halfFloatTexType - WebGL half-float type constant.
+ * @property {Object} formatRGBA - RGBA texture format mapping.
+ * @property {Object} formatRG - RG texture format mapping.
+ * @property {Object} formatR - Single channel (Red) texture format mapping.
+ */
+
+/**
+ * @type {WebGLExtensions} WebGL extensions and format configurations.
+ */
 export let ext;
 
+/**
+ * @type {WebGLVertexArrayObject} VAO used for full-screen quad rendering.
+ * @private
+ */
 let blitVao;
 
+/**
+ * Initializes the WebGL2 context, required extensions, and the blit VAO.
+ * @param {HTMLCanvasElement} canvas - The target canvas element.
+ * @throws {Error} If WebGL2 is not supported.
+ */
 export function initWebGL(canvas) {
     const params = { alpha: false, depth: false, stencil: false, antialias: false, preserveDrawingBuffer: false };
     gl = canvas.getContext('webgl2', params);
@@ -11,12 +36,9 @@ export function initWebGL(canvas) {
         throw new Error('WebGL 2 no está soportado en este navegador.');
     }
 
-    // Vital para renderizar EN los FBOs usando formatos flotantes en WebGL 2
     gl.getExtension('EXT_color_buffer_float');
 
     ext = {
-        // En WebGL 2 el filtrado lineal para float de 16 bits es nativo.
-        // Lo forzamos a true para que use gl.LINEAR y la física sea sedosa.
         supportLinearFiltering: true, 
         halfFloatTexType: gl.HALF_FLOAT,
         formatRGBA: { internalFormat: gl.RGBA16F, format: gl.RGBA },
@@ -24,7 +46,6 @@ export function initWebGL(canvas) {
         formatR: { internalFormat: gl.R16F, format: gl.RED }
     };
 
-    // --- PREPARACIÓN DEL VAO ---
     blitVao = gl.createVertexArray();
     gl.bindVertexArray(blitVao);
 
@@ -42,6 +63,11 @@ export function initWebGL(canvas) {
     gl.bindVertexArray(null);
 }
 
+/**
+ * Renders a full-screen quad to a target FBO or the default framebuffer.
+ * @param {FBO|null} target - The destination FBO, or null for the screen.
+ * @param {boolean} [clear=false] - Whether to clear the color buffer before drawing.
+ */
 export function blit(target, clear = false) {
     if (target == null) {
         gl.viewport(0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight);

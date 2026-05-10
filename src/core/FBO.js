@@ -1,7 +1,20 @@
 import { gl } from './gl.js';
 import { GLResource } from './GLResource.js';
 
+/**
+ * Framebuffer Object wrapper for WebGL textures.
+ * @extends GLResource
+ */
 export class FBO extends GLResource {
+    /**
+     * Creates a Framebuffer Object.
+     * @param {number} w - Width in pixels.
+     * @param {number} h - Height in pixels.
+     * @param {number} internalFormat - WebGL internal texture format.
+     * @param {number} format - WebGL texture format.
+     * @param {number} type - WebGL data type.
+     * @param {number} param - WebGL texture filtering parameter.
+     */
     constructor(w, h, internalFormat, format, type, param) {
         super();
         this.internalFormat = internalFormat;
@@ -12,6 +25,12 @@ export class FBO extends GLResource {
         this._createResources(w, h);
     }
 
+    /**
+     * Internal method to create WebGL resources (texture and framebuffer).
+     * @private
+     * @param {number} w - Width.
+     * @param {number} h - Height.
+     */
     _createResources(w, h) {
         this.width = w;
         this.height = h;
@@ -36,13 +55,20 @@ export class FBO extends GLResource {
         gl.clear(gl.COLOR_BUFFER_BIT);
     }
 
+    /**
+     * Resizes the FBO. Recreates resources if dimensions change.
+     * @param {number} w - New width.
+     * @param {number} h - New height.
+     */
     resize(w, h) {
         if (this.width === w && this.height === h) return;
-        
         this.release();
         this._createResources(w, h);
     }
 
+    /**
+     * Deletes the texture and framebuffer from GPU memory.
+     */
     release() {
         if (this.texture) {
             gl.deleteTexture(this.texture);
@@ -54,6 +80,11 @@ export class FBO extends GLResource {
         }
     }
 
+    /**
+     * Binds the FBO texture to a specific texture unit.
+     * @param {number} id - Texture unit index.
+     * @returns {number} The active texture unit index.
+     */
     attach(id) {
         gl.activeTexture(gl.TEXTURE0 + id);
         gl.bindTexture(gl.TEXTURE_2D, this.texture);

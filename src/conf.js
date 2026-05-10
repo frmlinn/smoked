@@ -1,6 +1,10 @@
 import { Pane } from 'tweakpane';
 import * as EssentialsPlugin from '@tweakpane/plugin-essentials';
 
+/**
+ * Global configuration state for simulation and visuals.
+ * Bound directly to the Tweakpane UI.
+ */
 export const state = {
     SIM_RESOLUTION: 128,
     DYE_RESOLUTION: 1024,
@@ -29,10 +33,12 @@ export const state = {
     SUNRAYS_WEIGHT: 1.0,
 };
 
+/** @type {Pane} Tweakpane instance for global GUI. */
 export const pane = new Pane({ title: 'Smoked Config' });
 
 pane.registerPlugin(EssentialsPlugin);
 
+/** @type {import('@tweakpane/core').BladeApi} Performance graph (FPS). */
 export const fpsGraph = pane.addBlade({
     view: 'fpsgraph',
     label: 'fps',
@@ -62,6 +68,11 @@ sunraysFolder.addBinding(state, 'SUNRAYS');
 sunraysFolder.addBinding(state, 'SUNRAYS_WEIGHT', { min: 0.3, max: 1.0 });
 
 const splatBtn = pane.addButton({ title: 'SPLAT!' });
+
+/**
+ * Registers a callback for the random splat button.
+ * @param {Function} callback - Execution callback.
+ */
 export const onRandomSplat = (callback) => {
     splatBtn.on('click', callback);
 };
