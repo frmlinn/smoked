@@ -1,4 +1,5 @@
 import { gl, ext, blit } from '../core/gl.js';
+import { GLResource } from '../core/GLResource.js';
 import { Program } from '../core/Program.js';
 import { FBO } from '../core/FBO.js';
 import { DoubleFBO } from '../core/DoubleFBO.js';
@@ -51,13 +52,11 @@ export class FluidSolver {
 
         gl.disable(gl.BLEND);
 
-        this.dye = new DoubleFBO(dyeRes.width, dyeRes.height, rgba.internalFormat, rgba.format, texType, filtering);
-        
-        this.velocity = new DoubleFBO(simRes.width, simRes.height, rg.internalFormat, rg.format, texType, filtering);
-        
-        this.divergence = new FBO(simRes.width, simRes.height, r.internalFormat, r.format, texType, gl.NEAREST);
-        this.curl       = new FBO(simRes.width, simRes.height, r.internalFormat, r.format, texType, gl.NEAREST);
-        this.pressure   = new DoubleFBO(simRes.width, simRes.height, r.internalFormat, r.format, texType, gl.NEAREST);
+        this.dye        = GLResource.initOrResize(this.dye, DoubleFBO, dyeRes.width, dyeRes.height, rgba.internalFormat, rgba.format, texType, filtering);
+        this.velocity   = GLResource.initOrResize(this.velocity, DoubleFBO, simRes.width, simRes.height, rg.internalFormat, rg.format, texType, filtering);
+        this.divergence = GLResource.initOrResize(this.divergence, FBO, simRes.width, simRes.height, r.internalFormat, r.format, texType, gl.NEAREST);
+        this.curl       = GLResource.initOrResize(this.curl, FBO, simRes.width, simRes.height, r.internalFormat, r.format, texType, gl.NEAREST);
+        this.pressure   = GLResource.initOrResize(this.pressure, DoubleFBO, simRes.width, simRes.height, r.internalFormat, r.format, texType, gl.NEAREST);
     }
 
     step(dt) {

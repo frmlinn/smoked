@@ -8,24 +8,20 @@ export class PostProcessor {
     constructor() {
         this.colorProgram          = new Program(shaders.baseVert, shaders.colorFrag);
         this.blurProgram           = new Program(shaders.blurVert, shaders.blurFrag);
-        
         this.bloomPrefilterProgram = new Program(shaders.baseVert, shaders.bloomPrefilterFrag);
         this.bloomBlurProgram      = new Program(shaders.baseVert, shaders.bloomBlurFrag);
         this.bloomFinalProgram     = new Program(shaders.baseVert, shaders.bloomFinalFrag);
-        
         this.sunraysMaskProgram    = new Program(shaders.baseVert, shaders.sunraysMaskFrag);
         this.sunraysProgram        = new Program(shaders.baseVert, shaders.sunraysFrag);
+
+        this.displayProgram        = new Program(shaders.baseVert, shaders.displayFrag);
 
         this.bloomFramebuffers = [];
         this.bloom = null;
         this.sunrays = null;
         this.sunraysTemp = null;
-        
-        this.displayProgram = null;
-        this.activeKeywords = '';
 
         this.initFramebuffers();
-        this.updateDisplayMaterial();
     }
 
     _getResolution(resolution) {
@@ -48,7 +44,16 @@ export class PostProcessor {
         const filtering = ext.supportLinearFiltering ? gl.LINEAR : gl.NEAREST;
 
         const bloomRes = this._getResolution(state.BLOOM_RESOLUTION);
-        this.bloom = new FBO(bloomRes.width, bloomRes.height, rgba.internalFormat, rgba.format, texType, filtering);
+        
+        if (!this.bloom) {
+            this.bloom = new FBO(bloomRes.width, bloomRes.height, rgba.internalFormat, rgba.format, texType, filtering);
+        } else {
+            this.bloom.resize(bloomRes.width, bloomRes.height);
+        }
+        
+        if (this.bloomFramebuffers && this.bloomFramebuffers.length > 0) {
+            this.bloomFramebuffers.forEach(fbo => fbo.release());
+        }
         this.bloomFramebuffers = [];
         
         for (let i = 0; i < state.BLOOM_ITERATIONS; i++) {
@@ -59,33 +64,16 @@ export class PostProcessor {
         }
 
         const sunraysRes = this._getResolution(state.SUNRAYS_RESOLUTION);
-        this.sunrays = new FBO(sunraysRes.width, sunraysRes.height, r.internalFormat, r.format, texType, filtering);
-        this.sunraysTemp = new FBO(sunraysRes.width, sunraysRes.height, r.internalFormat, r.format, texType, filtering);
-    }
-
-    updateDisplayMaterial() {
-        let keywords = [];
-        if (state.SHADING) keywords.push('SHADING');
-        if (state.BLOOM) keywords.push('BLOOM');
-        if (state.SUNRAYS) keywords.push('SUNRAYS');
-        
-        const keywordString = keywords.join(',');
-        if (this.activeKeywords === keywordString && this.displayProgram !== null) return;
-        
-        this.activeKeywords = keywordString;
-        
-        // Inyectamos los #define justo debajo del #version 300 es
-        let fragSource = shaders.displayFrag;
-        let defines = '';
-        keywords.forEach(kw => defines += `#define ${kw}\n`);
-        fragSource = fragSource.replace('#version 300 es', `#version 300 es\n${defines}`);
-
-        this.displayProgram = new Program(shaders.baseVert, fragSource);
+        if (!this.sunrays) {
+            this.sunrays = new FBO(sunraysRes.width, sunraysRes.height, r.internalFormat, r.format, texType, filtering);
+            this.sunraysTemp = new FBO(sunraysRes.width, sunraysRes.height, r.internalFormat, r.format, texType, filtering);
+        } else {
+            this.sunrays.resize(sunraysRes.width, sunraysRes.height);
+            this.sunraysTemp.resize(sunraysRes.width, sunraysRes.height);
+        }
     }
 
     render(solver) {
-        this.updateDisplayMaterial();
-
         if (state.BLOOM) this.applyBloom(solver.dye.read, this.bloom);
         
         if (state.SUNRAYS) {
@@ -93,11 +81,9 @@ export class PostProcessor {
             this.blur(this.sunrays, this.sunraysTemp, 1);
         }
 
-        // 1. Pintar el fondo TOTALMENTE OPACO (sin blending)
         gl.disable(gl.BLEND);
         this.drawColor(null, this.normalizeColor(state.BACK_COLOR));
 
-        // 2. Activar el blending solo para pintar el fluido encima
         gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
         gl.enable(gl.BLEND);
         
@@ -120,7 +106,6 @@ export class PostProcessor {
         gl.uniform1i(this.bloomPrefilterProgram.uniforms.uTexture, source.attach(0));
         blit(last);
 
-        // Downsample
         this.bloomBlurProgram.bind();
         for (let i = 0; i < this.bloomFramebuffers.length; i++) {
             let dest = this.bloomFramebuffers[i];
@@ -133,7 +118,6 @@ export class PostProcessor {
         gl.blendFunc(gl.ONE, gl.ONE);
         gl.enable(gl.BLEND);
 
-        // Upsample
         for (let i = this.bloomFramebuffers.length - 2; i >= 0; i--) {
             let baseTex = this.bloomFramebuffers[i];
             gl.uniform2f(this.bloomBlurProgram.uniforms.texelSize, last.texelSizeX, last.texelSizeY);
@@ -187,18 +171,22 @@ export class PostProcessor {
         let height = target == null ? gl.drawingBufferHeight : target.height;
 
         this.displayProgram.bind();
-        if (state.SHADING) {
-            gl.uniform2f(this.displayProgram.uniforms.texelSize, 1.0 / width, 1.0 / height);
-        }
         
+        gl.uniform2f(this.displayProgram.uniforms.texelSize, 1.0 / width, 1.0 / height);
+        
+        gl.uniform1i(this.displayProgram.uniforms.uEnableShading, state.SHADING ? 1 : 0);
+        gl.uniform1i(this.displayProgram.uniforms.uEnableBloom, state.BLOOM ? 1 : 0);
+        gl.uniform1i(this.displayProgram.uniforms.uEnableSunrays, state.SUNRAYS ? 1 : 0);
+
         gl.uniform1i(this.displayProgram.uniforms.uTexture, solver.dye.read.attach(0));
         
-        if (state.BLOOM) {
+        if (this.bloom) {
             gl.uniform1i(this.displayProgram.uniforms.uBloom, this.bloom.attach(1));
         }
-        if (state.SUNRAYS) {
-            gl.uniform1i(this.displayProgram.uniforms.uSunrays, this.sunrays.attach(2)); // Era 3, pero al quitar dithering, baja a 2
+        if (this.sunrays) {
+            gl.uniform1i(this.displayProgram.uniforms.uSunrays, this.sunrays.attach(2));
         }
+
         blit(target);
     }
 

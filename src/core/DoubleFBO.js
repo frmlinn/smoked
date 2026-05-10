@@ -1,7 +1,9 @@
 import { FBO } from './FBO.js';
+import { GLResource } from './GLResource.js';
 
-export class DoubleFBO {
+export class DoubleFBO extends GLResource {
     constructor(w, h, internalFormat, format, type, param) {
+        super();
         this.read = new FBO(w, h, internalFormat, format, type, param);
         this.write = new FBO(w, h, internalFormat, format, type, param);
     }
@@ -15,5 +17,15 @@ export class DoubleFBO {
         const temp = this.read;
         this.read = this.write;
         this.write = temp;
+    }
+
+    resize(w, h) {
+        this.read.resize(w, h);
+        this.write.resize(w, h);
+    }
+
+    release() {
+        this.read.release();
+        this.write.release();
     }
 }
