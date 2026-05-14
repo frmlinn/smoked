@@ -11,17 +11,33 @@ const solver = new FluidSolver();
 const post = new PostProcessor();
 const pointerManager = new PointerManager(canvas);
 
+/** @type {number} Monotonically increasing time cache marker */
 let lastTime = 0;
+/** @type {number} Periodic timer monitoring automated custom color switches */
 let colorUpdateTimer = 0.0;
 
+/** @type {number} Debounced DOM layout bounding width storage */
 let canvasWidth = canvas.clientWidth;
+/** @type {number} Debounced DOM layout bounding height storage */
 let canvasHeight = canvas.clientHeight;
+/** @type {number|undefined} Timer reference handling window resizing debounces */
+let resizeTimeout;
 
+/**
+ * Monitors DOM resize actions, deploying a macro-debounce callback to block loop thrashing.
+ * @type {ResizeObserver}
+ */
 const resizeObserver = new ResizeObserver(entries => {
     for (let entry of entries) {
         canvasWidth = entry.contentRect.width;
         canvasHeight = entry.contentRect.height;
     }
+    
+    clearTimeout(resizeTimeout);
+    
+    resizeTimeout = setTimeout(() => {
+        resizeCanvas();
+    }, 200);
 });
 resizeObserver.observe(canvas);
 
@@ -30,8 +46,7 @@ onRandomSplat(() => {
 });
 
 /**
- * Resizes the internal canvas resolution to match its styled CSS size.
- * Uses cached dimensions from ResizeObserver to prevent DOM layout thrashing.
+ * Resizes physical canvas and triggers WebGL2 texture reallocations.
  */
 function resizeCanvas() {
     const pixelRatio = window.devicePixelRatio || 1;
@@ -41,14 +56,15 @@ function resizeCanvas() {
     if (canvas.width !== width || canvas.height !== height) {
         canvas.width = width;
         canvas.height = height;
+        
         solver.initFramebuffers();
         post.initFramebuffers();
     }
 }
 
 /**
- * Updates pointer colors dynamically over time if RAINBOW mode is enabled.
- * @param {number} dt - Delta time in seconds.
+ * Cycle pointer input colors automatically when running in Rainbow Mode.
+ * @param {number} dt - Frame delta time in fractional seconds.
  */
 function updateColors(dt) {
     if (!state.RAINBOW) return;
@@ -63,8 +79,8 @@ function updateColors(dt) {
 }
 
 /**
- * Injects multiple random splats into the fluid simulation grid.
- * @param {number} amount - Number of splats to generate.
+ * Dispatches multiple randomized force and dye impulses into the core solver.
+ * @param {number} amount - Total quantity of simultaneous splats to evaluate.
  */
 function multipleSplats(amount) {
     for (let i = 0; i < amount; i++) {
@@ -81,7 +97,7 @@ function multipleSplats(amount) {
 }
 
 /**
- * Processes mouse/touch inputs and the pending splat queue, applying forces to the solver.
+ * Resolves cached pointer changes and processes the automated splat queue.
  */
 function applyInputs() {
     if (pointerManager.splatStack.length > 0) {
@@ -99,8 +115,8 @@ function applyInputs() {
 }
 
 /**
- * Main application render loop.
- * @param {number} time - Current timestamp from requestAnimationFrame.
+ * Main application execution loop handling updates and render scheduling.
+ * @param {number} time - Current hardware timestamp from high-res clock loops.
  */
 function update(time) {
     fpsGraph.begin();
@@ -110,7 +126,6 @@ function update(time) {
     dt = Math.min(dt, 0.016666); 
     lastTime = time;
 
-    resizeCanvas();
     updateColors(dt);
     applyInputs();
 
@@ -125,5 +140,5 @@ function update(time) {
 }
 
 pointerManager.splatStack.push(parseInt(Math.random() * 20.0) + 5);
-resizeCanvas();
+resizeCanvas(); 
 requestAnimationFrame(update);
