@@ -5,16 +5,16 @@ precision highp sampler2D;
 in vec2 vUv;
 uniform sampler2D uTarget;
 uniform float aspectRatio;
-uniform vec3 color;
+uniform vec4 color;
 uniform vec2 point;
 uniform float radius;
 
 out vec4 fragColor;
 
-void main () {
+void main() {
     vec2 p = vUv - point.xy;
     p.x *= aspectRatio;
-    vec3 splat = exp(-dot(p, p) / radius) * color;
-    vec3 base = texture(uTarget, vUv).xyz;
-    fragColor = vec4(base + splat, 1.0);
+    vec4 splat = exp(-dot(p, p) / radius) * color;
+    vec4 base = texture(uTarget, vUv);
+    fragColor = vec4(base.rgb + splat.rgb * 1.5, min(base.a + splat.a, 5.0));
 }

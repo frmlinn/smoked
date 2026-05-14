@@ -26,7 +26,7 @@ vec3 linearToGamma (vec3 color) {
 
 void main () {
     vec3 c = texture(uTexture, vUv).rgb;
-
+    
     if (uEnableShading) {
         vec3 lc = texture(uTexture, vL).rgb;
         vec3 rc = texture(uTexture, vR).rgb;

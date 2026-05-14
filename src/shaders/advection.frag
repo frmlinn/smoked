@@ -11,9 +11,10 @@ uniform float dissipation;
 
 out vec4 fragColor;
 
-void main () {
+void main() {
     vec2 coord = vUv - dt * texture(uVelocity, vUv).xy * texelSize;
     vec4 result = texture(uSource, coord);
-    float decay = 1.0 + dissipation * dt;
-    fragColor = result / decay;
+    float d1 = 1.0 / (1.0 + dissipation * dt);
+    float d2 = 1.0 / (1.0 + dissipation * 0.2 * dt);
+    fragColor = result * vec4(d1, d1, d1, d2);
 }
