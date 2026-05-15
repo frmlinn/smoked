@@ -10,6 +10,7 @@ import bloomFinalFrag from './bloomFinal.frag?raw';
 import sunraysMaskFrag from './sunraysMask.frag?raw';
 import sunraysFrag from './sunrays.frag?raw';
 import splatFrag from './splat.frag?raw';
+import splatObstacleFrag from './splatObstacle.frag?raw';
 import advectionFrag from './advection.frag?raw';
 import divergenceFrag from './divergence.frag?raw';
 import pressureFrag from './pressure.frag?raw';
@@ -24,8 +25,8 @@ import physicsForcesFrag from './physicsForces.frag?raw';
 export const shaders = {
     baseVert, blurVert, blurFrag, copyFrag, clearFrag, colorFrag,
     bloomPrefilterFrag, bloomBlurFrag, bloomFinalFrag,
-    sunraysMaskFrag, sunraysFrag, splatFrag, advectionFrag,
-    divergenceFrag, pressureFrag, gradientSubtractFrag, 
+    sunraysMaskFrag, sunraysFrag, splatFrag, splatObstacleFrag,
+    advectionFrag, divergenceFrag, pressureFrag, gradientSubtractFrag, 
     vectorVert, vectorFrag, displayColorFrag, displayPressureFrag, 
     displayTemperatureFrag, physicsForcesFrag
 };

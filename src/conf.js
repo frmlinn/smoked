@@ -28,6 +28,11 @@ export const state = {
     SPLAT_FORCE: 6000,
     PAUSE: false,
 
+    // --- Tools & Obstacles ---
+    // 0: Fluido, 1: Pintar Obstáculo, 2: Borrar Obstáculo
+    TOOL_MODE: 0,
+    OBSTACLE_RADIUS: 0.02,
+
     // --- View Profile ---
     // 0: Artist, 1: Pressure, 2: Temperature
     VIEW_MODE: 0, 
@@ -58,16 +63,9 @@ export const state = {
 // GUI INITIALIZATION
 // ==========================================================
 
-/** * Main Tweakpane instance for the application GUI.
- * @type {Pane} 
- */
 export const pane = new Pane({ title: 'Smoked Engine' });
-
 pane.registerPlugin(EssentialsPlugin);
 
-/** * Real-time FPS monitoring graph.
- * @type {import('@tweakpane/core').BladeApi} 
- */
 export const fpsGraph = pane.addBlade({
     view: 'fpsgraph',
     label: 'fps',
@@ -78,12 +76,23 @@ export const fpsGraph = pane.addBlade({
 // A. CORE SIMULATION FOLDERS
 // ==========================================================
 
+const toolsFolder = pane.addFolder({ title: 'Herramientas (Tools)' });
+toolsFolder.addBinding(state, 'TOOL_MODE', {
+    options: {
+        Fluido: 0,
+        Pintar: 1,
+        Borrar: 2,
+    },
+    label: 'Herramienta'
+});
+toolsFolder.addBinding(state, 'OBSTACLE_RADIUS', { min: 0.005, max: 0.1, label: 'Grosor Muro' });
+
 const simFolder = pane.addFolder({ title: 'Simulation' });
 simFolder.addBinding(state, 'PRESSURE_ITERATIONS', { min: 1, max: 50, step: 1 });
 simFolder.addBinding(state, 'VELOCITY_DISSIPATION', { min: 0.0, max: 4.0 });
 simFolder.addBinding(state, 'DENSITY_DISSIPATION', { min: 0.0, max: 4.0 });
 simFolder.addBinding(state, 'CURL', { min: 0.0, max: 50.0, label: 'VORTICITY' });
-simFolder.addBinding(state, 'SPLAT_RADIUS', { min: 0.01, max: 1.0 });
+simFolder.addBinding(state, 'SPLAT_RADIUS', { min: 0.01, max: 1.0, label: 'Grosor Fluido' });
 simFolder.addBinding(state, 'PAUSE');
 
 const thermoFolder = pane.addFolder({ title: 'Thermodynamics' });
@@ -103,7 +112,6 @@ const tab = pane.addTab({
     ],
 });
 
-// Sync WebGL render pipeline with the active UI tab
 tab.on('select', (ev) => {
     state.VIEW_MODE = ev.index;
 });
@@ -128,20 +136,12 @@ const pPressure = tab.pages[1];
 pPressure.addBinding(state, 'PRESSURE_CONTRAST', { min: 0.1, max: 5.0 });
 pPressure.addBinding(state, 'SHOW_VECTORS');
 
-// --- TAB 2: TEMPERATURE ---
-const pTemp = tab.pages[2];
-// Kept intentionally empty for future thermal-specific visualization settings.
-
 // ==========================================================
 // C. GLOBAL ACTIONS
 // ==========================================================
 
-const splatBtn = pane.addButton({ title: 'Splat!' });
+const splatBtn = pane.addButton({ title: 'Splat Aleatorio!' });
+const clearObstaclesBtn = pane.addButton({ title: 'Limpiar Obstáculos' });
 
-/**
- * Registers a callback function to be executed when the 'Splat!' button is clicked.
- * @param {Function} callback - The execution handler.
- */
-export const onRandomSplat = (callback) => {
-    splatBtn.on('click', callback);
-};
+export const onRandomSplat = (callback) => { splatBtn.on('click', callback); };
+export const onClearObstacles = (callback) => { clearObstaclesBtn.on('click', callback); };

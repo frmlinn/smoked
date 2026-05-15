@@ -7,8 +7,10 @@ in highp vec2 vL;
 in highp vec2 vR;
 in highp vec2 vT;
 in highp vec2 vB;
+
 uniform sampler2D uPressure;
 uniform sampler2D uDivergence;
+uniform sampler2D uObstacles;
 
 out vec4 fragColor;
 
@@ -19,6 +21,17 @@ void main () {
     float B = texture(uPressure, vB).x;
     float C = texture(uPressure, vUv).x;
     float divergence = texture(uDivergence, vUv).x;
+
+    float obsL = texture(uObstacles, vL).x;
+    float obsR = texture(uObstacles, vR).x;
+    float obsT = texture(uObstacles, vT).x;
+    float obsB = texture(uObstacles, vB).x;
+
+    L = mix(L, C, obsL);
+    R = mix(R, C, obsR);
+    T = mix(T, C, obsT);
+    B = mix(B, C, obsB);
+
     float pressure = (L + R + B + T - divergence) * 0.25;
     fragColor = vec4(pressure, 0.0, 0.0, 1.0);
 }

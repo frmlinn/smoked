@@ -17,6 +17,9 @@ uniform bool uEnableShading;
 uniform bool uEnableBloom;
 uniform bool uEnableSunrays;
 
+uniform sampler2D uObstacles;
+uniform vec3 uObstacleColor;
+
 out vec4 fragColor;
 
 vec3 linearToGamma (vec3 color) {
@@ -26,7 +29,6 @@ vec3 linearToGamma (vec3 color) {
 
 void main () {
     vec3 c = texture(uTexture, vUv).rgb;
-    
     if (uEnableShading) {
         vec3 lc = texture(uTexture, vL).rgb;
         vec3 rc = texture(uTexture, vR).rgb;
@@ -59,6 +61,11 @@ void main () {
         c += bloom;
     }
 
+    float obs = texture(uObstacles, vUv).x;
+    c = mix(c, uObstacleColor, obs);
+
     float a = max(c.r, max(c.g, c.b));
+    a = max(a, obs);
+
     fragColor = vec4(c, a);
 }

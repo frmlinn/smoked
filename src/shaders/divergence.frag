@@ -8,6 +8,7 @@ in highp vec2 vR;
 in highp vec2 vT;
 in highp vec2 vB;
 uniform sampler2D uVelocity;
+uniform sampler2D uObstacles;
 
 out vec4 fragColor;
 
@@ -16,8 +17,18 @@ void main () {
     float R = texture(uVelocity, vR).x;
     float T = texture(uVelocity, vT).y;
     float B = texture(uVelocity, vB).y;
-
     vec2 C = texture(uVelocity, vUv).xy;
+
+    float obsL = texture(uObstacles, vL).x;
+    float obsR = texture(uObstacles, vR).x;
+    float obsT = texture(uObstacles, vT).x;
+    float obsB = texture(uObstacles, vB).x;
+
+    L = mix(L, -C.x, obsL);
+    R = mix(R, -C.x, obsR);
+    T = mix(T, -C.y, obsT);
+    B = mix(B, -C.y, obsB);
+
     if (vL.x < 0.0) { L = -C.x; }
     if (vR.x > 1.0) { R = -C.x; }
     if (vT.y > 1.0) { T = -C.y; }
