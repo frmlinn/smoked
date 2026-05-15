@@ -1,10 +1,9 @@
-# Smoked 💨
+# Smoked
 
 Real-time 2D fluid simulation engine implemented in **WebGL2**. The solver follows an **Eulerian grid-based approach** to solve the incompressible Navier-Stokes equations for fluid flow. 
 
 The system leverages GPGPU (General-Purpose computing on Graphics Processing Units) by executing all physical calculations within fragment shaders. State persistence and iterative computation are handled via Framebuffer Objects (FBOs) using a "Ping-Pong" texture swapping technique.
 
----
 
 ## Physics and Mathematical Formulation
 
@@ -52,7 +51,6 @@ We typically perform 20 to 50 iterations per frame to reach convergence.
 The final velocity field is obtained by subtracting the pressure gradient from the intermediate velocity (`gradientSubtract.frag`):
 $$\mathbf{u}^{n+1} = \mathbf{u}^* - \frac{\Delta t}{\rho} \nabla p$$
 
----
 
 ## Technical Implementation
 
@@ -60,12 +58,9 @@ $$\mathbf{u}^{n+1} = \mathbf{u}^* - \frac{\Delta t}{\rho} \nabla p$$
 - **Ping-Pong Rendering:** Implemented via the `DoubleFBO` class, allowing the GPU to read from a previous state while writing to the current one simultaneously.
 - **Post-Processing:** Includes Bloom, Sunrays (God Rays), and Gaussian Blur passes to enhance the visualization of the dye density.
 
----
 
 > **NOTE:** **Feature in Development (Obstacles)**
 > There is a secondary active branch focusing on the implementation of static obstacles. This involves enforcing **Neumann Boundary Conditions** ($\frac{\partial p}{\partial \mathbf{n}} = 0$) during the pressure solve pass to ensure fluid velocity is zero at solid interfaces and flows around boundaries correctly.
-
----
 
 ## Local Development
 
